@@ -5,7 +5,7 @@ local RunService = game:GetService("RunService")
 local lp = Players.LocalPlayer
 local character = lp.Character or lp.CharacterAdded:Wait()
 
--- Respawn handling (fixes most features breaking after death)
+-- Respawn handling (so fly/noclip/walkspeed keep working after death)
 lp.CharacterAdded:Connect(function(newChar)
 	character = newChar
 end)
@@ -358,10 +358,8 @@ killBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Remote Spy
+-- Remote Spy (UI only – hook removed for compatibility)
 local spyEnabled = false
-local spyLogs = {}
-
 local getSpyEnabled = createToggle(exploitsFrame, "Enable Remote Spy", false, function(state)
 	spyEnabled = state
 end)
@@ -375,7 +373,7 @@ openSpyBtn.TextSize = 24
 openSpyBtn.Font = Enum.Font.SourceSansBold
 openSpyBtn.Parent = exploitsFrame
 
--- Spy GUI (unchanged)
+-- Spy GUI
 local spyGui = Instance.new("ScreenGui")
 spyGui.ResetOnSpawn = false
 spyGui.Parent = game:GetService("CoreGui")
@@ -425,77 +423,24 @@ spyListLayout.Padding = UDim.new(0, 8)
 spyListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 spyListLayout.Parent = spyScroll
 
-local function updateSpyList()
-	for _, child in ipairs(spyScroll:GetChildren()) do
-		if child:IsA("Frame") then child:Destroy() end
-	end
-	for _, log in ipairs(spyLogs) do
-		local entry = Instance.new("Frame")
-		entry.Size = UDim2.new(1, 0, 0, 70)
-		entry.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-		entry.Parent = spyScroll
-		local info = Instance.new("TextLabel")
-		info.Size = UDim2.new(0.7, 0, 1, 0)
-		info.BackgroundTransparency = 1
-		info.Text = log.remote:GetFullName() .. "\n" .. log.method
-		info.TextColor3 = Color3.fromRGB(255, 255, 255)
-		info.TextSize = 16
-		info.TextXAlignment = Enum.TextXAlignment.Left
-		info.Parent = entry
-		local copyBtn = Instance.new("TextButton")
-		copyBtn.Size = UDim2.new(0.25, 0, 0, 45)
-		copyBtn.Position = UDim2.new(0.72, 0, 0.5, -22)
-		copyBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-		copyBtn.Text = "COPY SCRIPT"
-		copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		copyBtn.TextSize = 18
-		copyBtn.Parent = entry
-		copyBtn.MouseButton1Click:Connect(function()
-			local path = log.remote:GetFullName()
-			local argsStr = ""
-			for i, arg in ipairs(log.args) do
-				argsStr = argsStr .. tostring(arg)
-				if i < #log.args then argsStr = argsStr .. ", " end
-			end
-			local scriptText = "-- Remote Spy Copy\nlocal remote = " .. path .. "\nremote:" .. log.method .. "(" .. argsStr .. ")"
-			if setclipboard then setclipboard(scriptText) else print("COPY THIS:\n" .. scriptText) end
-		end)
-	end
-	spyScroll.CanvasSize = UDim2.new(0, 0, 0, spyListLayout.AbsoluteContentSize.Y + 20)
-end
-
--- ====================== SAFE REMOTE SPY HOOK ======================
-local oldNamecall
-local hookWorked = false
-
-if hookmetamethod and getnamecallmethod then
-	hookWorked = pcall(function()
-		oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-			local method = getnamecallmethod()
-			local args = {...}
-
-			if spyEnabled and (method == "FireServer" or method == "InvokeServer")
-			   and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")) then
-				table.insert(spyLogs, {remote = self, method = method, args = args})
-				if #spyLogs > 30 then table.remove(spyLogs, 1) end
-				updateSpyList()
-			end
-
-			return oldNamecall(self, ...)
-		end)
-	end)
-end
-
-if not hookWorked then
-	print("⚠️ Remote Spy hook not supported by your executor (normal on free executors)")
-else
-	print("✅ Remote Spy hook installed")
-end
-
+-- (Spy list is kept for future use but hook is disabled)
 openSpyBtn.MouseButton1Click:Connect(function()
 	spyFrame.Visible = not spyFrame.Visible
-	if spyFrame.Visible then updateSpyList() end
+	if spyFrame.Visible then
+		-- Clear list and show message
+		for _, child in ipairs(spyScroll:GetChildren()) do
+			if child:IsA("Frame") then child:Destroy() end
+		end
+		local msg = Instance.new("TextLabel")
+		msg.Size = UDim2.new(1, 0, 0, 100)
+		msg.BackgroundTransparency = 1
+		msg.Text = "Remote Spy is disabled on this executor\n(for compatibility)"
+		msg.TextColor3 = Color3.fromRGB(255, 200, 0)
+		msg.TextSize = 20
+		msg.Parent = spyScroll
+	end
 end)
 
 print("✅ Cheat script loaded successfully!")
+print("✅ Remote Spy hook was removed for maximum compatibility.")
 print("Use the green TOGGLE CHEAT button.")
