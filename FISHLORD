@@ -1,3 +1,8 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+task.wait(0.5)
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -5,7 +10,7 @@ local RunService = game:GetService("RunService")
 local lp = Players.LocalPlayer
 local character = lp.Character or lp.CharacterAdded:Wait()
 
--- Respawn handling (so fly/noclip/walkspeed keep working after death)
+-- Respawn handling (fly/noclip/walkspeed keep working after death)
 lp.CharacterAdded:Connect(function(newChar)
 	character = newChar
 end)
@@ -358,7 +363,7 @@ killBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Remote Spy (UI only – hook removed for compatibility)
+-- Remote Spy (UI only – hook completely removed for Delta)
 local spyEnabled = false
 local getSpyEnabled = createToggle(exploitsFrame, "Enable Remote Spy", false, function(state)
 	spyEnabled = state
@@ -423,24 +428,21 @@ spyListLayout.Padding = UDim.new(0, 8)
 spyListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 spyListLayout.Parent = spyScroll
 
--- (Spy list is kept for future use but hook is disabled)
 openSpyBtn.MouseButton1Click:Connect(function()
 	spyFrame.Visible = not spyFrame.Visible
 	if spyFrame.Visible then
-		-- Clear list and show message
 		for _, child in ipairs(spyScroll:GetChildren()) do
 			if child:IsA("Frame") then child:Destroy() end
 		end
 		local msg = Instance.new("TextLabel")
 		msg.Size = UDim2.new(1, 0, 0, 100)
 		msg.BackgroundTransparency = 1
-		msg.Text = "Remote Spy is disabled on this executor\n(for compatibility)"
+		msg.Text = "Remote Spy is disabled on this executor\n(for maximum compatibility with Delta)"
 		msg.TextColor3 = Color3.fromRGB(255, 200, 0)
 		msg.TextSize = 20
 		msg.Parent = spyScroll
 	end
 end)
 
-print("✅ Cheat script loaded successfully!")
-print("✅ Remote Spy hook was removed for maximum compatibility.")
+print("✅ Cheat script loaded successfully on Delta Executor!")
 print("Use the green TOGGLE CHEAT button.")
